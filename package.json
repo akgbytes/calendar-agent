@@ -13,6 +13,7 @@
   "packageManager": "pnpm@10.33.4",
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/marked-terminal": "^6.1.1",
     "@types/node": "^25.9.3",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
@@ -25,6 +26,8 @@
     "express": "^5.2.1",
     "googleapis": "^173.0.0",
     "langchain": "^1.5.0",
+    "marked": "^18.0.5",
+    "marked-terminal": "^7.3.0",
     "zod": "^4.4.3"
   }
 }

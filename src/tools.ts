@@ -11,7 +11,11 @@ const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 export const getEvents = tool(
   async ({ q, timeMax, timeMin }) => {
     try {
-      console.log("received props\n", JSON.stringify({ q, timeMin, timeMax }));
+      console.log(
+        "Input:\n",
+        JSON.parse(JSON.stringify({ q, timeMin, timeMax })),
+        "\n",
+      );
 
       const result = await calendar.events.list({
         calendarId: "primary",
@@ -72,8 +76,9 @@ export const getEvents = tool(
 export const createEvent = tool(
   async ({ summary, start, end, attendees }) => {
     console.log(
-      "received props\n",
-      JSON.stringify({ summary, start, end, attendees }),
+      "Input:\n",
+      JSON.parse(JSON.stringify({ summary, start, end, attendees })),
+      "\n",
     );
 
     try {

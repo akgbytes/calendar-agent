@@ -4,6 +4,14 @@ import type { StructuredToolInterface } from "@langchain/core/tools";
 import { END, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
 import { AIMessage } from "langchain";
 import { createEvent, getEvents } from "./tools.js";
+import readline from "node:readline/promises";
+import { stdin, stdout } from "node:process";
+import { marked } from "marked";
+import TerminalRenderer from "marked-terminal";
+
+marked.setOptions({
+  renderer: new TerminalRenderer() as any,
+});
 
 const tools: StructuredToolInterface[] = [getEvents, createEvent];
 const toolsByName = Object.fromEntries(
@@ -80,21 +88,33 @@ const agent = new StateGraph(MessagesAnnotation)
 const app = agent.compile();
 
 async function main() {
-  const response = await app.invoke({
-    messages: [
-      {
-        role: "system",
-        content: `Current Datetime: ${new Date(Date.now())}`,
-      },
-      {
-        role: "user",
-        content:
-          "create a meeting for this 12th June with aman(akgbytes@gmail.com) regarding his transfter",
-      },
-    ],
-  });
+  const rl = readline.createInterface({ input: stdin, output: stdout });
 
-  console.log(response.messages.at(-1)?.content);
+  while (true) {
+    const userPrompt = await rl.question("You: ");
+
+    if (!userPrompt || userPrompt === "bye") {
+      rl.close();
+      return;
+    }
+
+    const response = await app.invoke({
+      messages: [
+        {
+          role: "system",
+          content: `Current Datetime: ${new Date(Date.now())}`,
+        },
+        {
+          role: "user",
+          content: userPrompt,
+        },
+      ],
+    });
+
+    console.log(
+      marked.parse(`Assistant: ${response.messages.at(-1)?.content}`),
+    );
+  }
 }
 
 main();
