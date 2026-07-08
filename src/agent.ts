@@ -1,13 +1,19 @@
 import "dotenv/config";
 import { ChatGroq } from "@langchain/groq";
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import { END, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
+import {
+  END,
+  MemorySaver,
+  MessagesAnnotation,
+  StateGraph,
+} from "@langchain/langgraph";
 import { AIMessage } from "langchain";
 import { createEvent, getEvents } from "./tools.js";
 import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 import { marked } from "marked";
 import TerminalRenderer from "marked-terminal";
+import { randomUUID } from "node:crypto";
 
 marked.setOptions({
   renderer: new TerminalRenderer() as any,
@@ -85,36 +91,46 @@ const agent = new StateGraph(MessagesAnnotation)
     [END]: "__end__",
   });
 
-const app = agent.compile();
+const checkpointer = new MemorySaver();
+const app = agent.compile({ checkpointer });
 
 async function main() {
   const rl = readline.createInterface({ input: stdin, output: stdout });
+  let config = {
+    configurable: {
+      thread_id: randomUUID(),
+    },
+  };
 
   while (true) {
     const userPrompt = await rl.question("You: ");
 
     if (!userPrompt || userPrompt === "bye") {
-      rl.close();
-      return;
+      break;
     }
 
-    const response = await app.invoke({
-      messages: [
-        {
-          role: "system",
-          content: `Current Datetime: ${new Date(Date.now())}`,
-        },
-        {
-          role: "user",
-          content: userPrompt,
-        },
-      ],
-    });
+    const response = await app.invoke(
+      {
+        messages: [
+          {
+            role: "system",
+            content: `Current Datetime: ${new Date(Date.now())}`,
+          },
+          {
+            role: "user",
+            content: userPrompt,
+          },
+        ],
+      },
+      config,
+    );
 
     console.log(
       marked.parse(`Assistant: ${response.messages.at(-1)?.content}`),
     );
   }
+
+  rl.close();
 }
 
 main();
