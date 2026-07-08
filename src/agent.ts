@@ -1,15 +1,14 @@
 import "dotenv/config";
 import { ChatGroq } from "@langchain/groq";
+import type { StructuredToolInterface } from "@langchain/core/tools";
 import { END, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
 import { AIMessage } from "langchain";
 import { createEvent, getEvents } from "./tools.js";
 
-const toolsByName = {
-  [getEvents.name]: getEvents,
-  [createEvent.name]: createEvent,
-};
-
-const tools = Object.values(toolsByName);
+const tools: StructuredToolInterface[] = [getEvents, createEvent];
+const toolsByName = Object.fromEntries(
+  tools.map((tool) => [tool.name, tool]),
+) as Record<string, StructuredToolInterface>;
 
 const model = new ChatGroq({
   model: "openai/gpt-oss-120b",
@@ -84,9 +83,13 @@ async function main() {
   const response = await app.invoke({
     messages: [
       {
+        role: "system",
+        content: `Current Datetime: ${new Date(Date.now())}`,
+      },
+      {
         role: "user",
-        // content: "what is today's date? And how do you know this",
-        content: "do i have any meetings?",
+        content:
+          "create a meeting for this 12th June with aman(akgbytes@gmail.com) regarding his transfter",
       },
     ],
   });
